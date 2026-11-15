@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pilates Studio OS - Yönetim Paneli & WhatsApp Entegrasyonu</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fdf2f4',
+              100: '#fce7ea',
+              200: '#f9d2d9',
+              500: '#e11d48',
+              600: '#be123c',
+              700: '#9f1239',
+              900: '#4c0519',
+            },
+            studio: {
+              rose: '#f43f5e',
+              sage: '#10b981',
+              cream: '#fafaf9',
+              dark: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .whatsapp-bg {
+      background-color: #efeae2;
+      background-image: radial-gradient(#d1d7db 0.75px, transparent 0.75px);
+      background-size: 16px 16px;
+    }
+
+    .pulse-sync {
+      animation: pulseSync 1.8s infinite;
+    }
+    @keyframes pulseSync {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans select-none">
+
+  <!-- TOP HEADER / NAV -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 lg:px-8 py-3 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-rose-400 flex items-center justify-center text-white shadow-md shadow-rose-200">
+        <i data-lucide="flower-2" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-bold text-lg text-slate-900 leading-tight">ZenPilates Studio</h1>
+          <span class="px-2 py-0.5 text-xs font-semibold bg-rose-100 text-rose-700 rounded-full">Canlı Demo</span>
+        </div>
+        <p class="text-xs text-slate-500">Akıllı Salon Yönetimi & WhatsApp Entegrasyonu</p>
+      </div>
+    </div>
+
+    <!-- Active Sync Badge -->
+    <div class="hidden md:flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <span>Panel & WhatsApp Canlı Senkronize</span>
+      </div>
+      <button onclick="resetData()" class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5" title="Örnek verileri sıfırla">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+        <span>Verileri Sıfırla</span>
+      </button>
+    </div>
+
+    <!-- Mobile Tab Switcher (Visible on small screens) -->
+    <div class="flex lg:hidden bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+      <button onclick="setMobileView('panel')" id="mob-btn-panel" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-900">Panel</button>
+      <button onclick="setMobileView('whatsapp')" id="mob-btn-wa" class="px-3 py-1.5 rounded-lg text-slate-600">WhatsApp</button>
+    </div>
+  </header>
+
+  <!-- MAIN DUAL-VIEW WORKSPACE -->
+  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1920px] w-full mx-auto">
+
+    <!-- LEFT: MANAGEMENT DASHBOARD (65% on Desktop) -->
+    <section id="panel-container" class="w-full lg:w-[62%] xl:w-[66%] h-[calc(100vh-65px)] overflow-y-auto p-4 lg:p-6 space-y-6">
+
+      <!-- Navigation Tabs inside Panel -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-1.5">
+          <button onclick="switchTab('takvim')" id="tab-btn-takvim" class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-rose-500 text-white shadow-sm shadow-rose-200">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>Ders Takvimi & Seanslar</span>
+          </button>
+          <button onclick="switchTab('uyeler')" id="tab-btn-uyeler" class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-100">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span>Üyeler & Paket Takibi</span>
+            <span id="badge-debt-count" class="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-full font-bold">1 Bekleyen</span>
+          </button>
+          <button onclick="switchTab('kasa')" id="tab-btn-kasa" class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-100">
+            <i data-lucide="wallet" class="w-4 h-4"></i>
+            <span>Kasa & Gider Muhasebesi</span>
+          </button>
+        </div>
+
+        <!-- Quick Action: Pazar Duyurusu Hazırla -->
+        <button onclick="openSundayBroadcastModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Pazar Grubu Bildirimi</span>
+        </button>
+      </div>
+
+      <!-- ================= TAB 1: DERS TAKVİMİ ================= -->
+      <div id="tab-content-takvim" class="space-y-6">
+
+        <!-- Takvim Listesi & Eğitmen Seans Yönetimi -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+            <div>
+              <h2 class="font-bold text-slate-900 text-base">Haftalık Seans Takvimi</h2>
+              <p class="text-xs text-slate-500">Eğitmenler boş saatleri buradan ekler; WhatsApp botu bu listeyi canlı okur.</p>
+            </div>
+            <button onclick="openAddSlotModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold transition-colors">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Yeni Seans Saati Ekle</span>
+            </button>
+          </div>
+
+          <!-- Slots Grid -->
+          <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="slots-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= TAB 2: ÜYELER & PAKET TAKİBİ ================= -->
+      <div id="tab-content-uyeler" class="hidden space-y-6">
+        
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="font-bold text-slate-900 text-base">Üye Listesi & 1 Aylık Üyelik Takibi</h2>
+              <p class="text-xs text-slate-500">Kural: Üyelikler 30 gün sürer. Üyeler bu 1 ay boyunca her hafta 2 derse katılabilir.</p>
+            </div>
+            <button onclick="openAddMemberModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl text-xs font-bold transition-colors">
+              <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+              <span>Yeni Üye Kaydet</span>
+            </button>
+          </div>
+
+          <!-- Members Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-y border-slate-200">
+                <tr>
+                  <th class="py-3 px-3">Üye Bilgisi</th>
+                  <th class="py-3 px-3">Kalan Süre</th>
+                  <th class="py-3 px-3">Bu Haftaki Ders Hakkı</th>
+                  <th class="py-3 px-3">Ödeme Durumu</th>
+                  <th class="py-3 px-3">Bu Haftaki Dersi</th>
+                  <th class="py-3 px-3 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="members-table-body" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= TAB 3: KASA & MASRAF GİDERLERİ ================= -->
+      <div id="tab-content-kasa" class="hidden space-y-6">
+        
+        <!-- Financial Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm bg-gradient-to-br from-white to-emerald-50/40">
+            <span class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Toplam Alınan Gelir</span>
+            <div class="text-2xl font-extrabold text-emerald-700 mt-1" id="kasa-total-income">₺32.000</div>
+            <p class="text-[11px] text-slate-500 mt-1">Üye paket ödemelerinden</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-rose-100 shadow-sm bg-gradient-to-br from-white to-rose-50/40">
+            <span class="text-xs font-semibold text-rose-700 uppercase tracking-wider">Manuel Girilen Giderler</span>
+            <div class="text-2xl font-extrabold text-rose-700 mt-1" id="kasa-total-expense">₺8.450</div>
+            <p class="text-[11px] text-slate-500 mt-1">Kira, temizlik, malzeme, faturalar</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm bg-gradient-to-br from-white to-slate-50">
+            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Net Kasa Durumu</span>
+            <div class="text-2xl font-extrabold text-slate-900 mt-1" id="kasa-net-balance">₺23.550</div>
+            <p class="text-[11px] text-emerald-600 font-semibold mt-1">Kasa Pozitif (+)</p>
+          </div>
+        </div>
+
+        <!-- Add Expense & Transactions List -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Sol: Masraf Ekle Formu -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm h-fit">
+            <h3 class="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2">
+              <i data-lucide="receipt-text" class="w-4 h-4 text-rose-500"></i>
+              <span>Yeni Masraf / Harcama Gir</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Elektrik, temizlik, eğitmen hakedişi veya malzeme masraflarını anında kasadan düşürün.</p>
+
+            <form onsubmit="handleAddExpense(event)" class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Masraf Kalemi / Açıklama</label>
+                <input type="text" id="expense-desc" required placeholder="Örn: Reformer yay bakımı & dezenfektan" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:border-rose-500">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Tutar (TL)</label>
+                  <input type="number" id="expense-amount" required placeholder="1250" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:border-rose-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori</label>
+                  <select id="expense-category" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:border-rose-500 bg-white">
+                    <option value="Kira & Aidat">Kira & Aidat</option>
+                    <option value="Temizlik & Hijyen">Temizlik & Hijyen</option>
+                    <option value="Ekipman & Bakım">Ekipman & Bakım</option>
+                    <option value="Faturalar (Elek/Su/İnt)">Faturalar</option>
+                    <option value="Eğitmen Ödemesi">Eğitmen Ödemesi</option>
+                    <option value="Diğer">Diğer</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                Masrafı Kasaya İşle
+              </button>
+            </form>
+          </div>
+
+          <!-- Sağ: Kasa Hareketleri Tablosu -->
+          <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-900 text-sm mb-3 flex items-center justify-between">
+              <span>Son Kasa Hareketleri (Gelir & Giderler)</span>
+              <span class="text-xs font-normal text-slate-400">Son 30 Gün</span>
+            </h3>
+
+            <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold sticky top-0">
+                  <tr>
+                    <th class="py-2.5 px-3">Tarih</th>
+                    <th class="py-2.5 px-3">Tür</th>
+                    <th class="py-2.5 px-3">Açıklama</th>
+                    <th class="py-2.5 px-3">Tutar</th>
+                  </tr>
+                </thead>
+                <tbody id="kasa-transactions-body" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- RIGHT: LIVE WHATSAPP PHONE SIMULATOR (38% on Desktop) -->
+    <section id="whatsapp-container" class="w-full lg:w-[38%] xl:w-[34%] h-[calc(100vh-65px)] bg-slate-200/80 border-l border-slate-300 p-3 lg:p-6 flex flex-col items-center justify-center">
+
+      <!-- Smartphone Frame -->
+      <div class="w-full max-w-[390px] h-[720px] bg-slate-900 rounded-[44px] p-3 shadow-2xl border-4 border-slate-700 flex flex-col relative overflow-hidden">
+        
+        <!-- Speaker / Dynamic Island -->
+        <div class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-4 bg-black rounded-full z-30 flex items-center justify-center">
+          <div class="w-3 h-3 rounded-full bg-slate-900 border border-slate-800 mr-2"></div>
+          <div class="w-10 h-1 rounded-full bg-slate-800"></div>
+        </div>
+
+        <!-- Inner Phone Screen -->
+        <div class="w-full h-full bg-white rounded-[34px] flex flex-col overflow-hidden relative shadow-inner">
+
+          <!-- WhatsApp Header -->
+          <div class="bg-[#075e54] text-white pt-7 pb-2.5 px-3 flex items-center justify-between shadow-md z-20">
+            <div class="flex items-center gap-2">
+              <i data-lucide="arrow-left" class="w-5 h-5 cursor-pointer"></i>
+              <div class="relative">
+                <div class="w-9 h-9 rounded-full bg-rose-200 border-2 border-white flex items-center justify-center text-rose-800 font-bold text-xs">
+                  ZP
+                </div>
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border border-white rounded-full"></span>
+              </div>
+              <div class="leading-tight">
+                <div class="font-semibold text-sm flex items-center gap-1">
+                  <span>ZenPilates Asistanı</span>
+                  <i data-lucide="badge-check" class="w-3.5 h-3.5 text-sky-300"></i>
+                </div>
+                <div class="text-[10px] text-emerald-200">çevrimiçi • Resmi Salon Botu</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-slate-200">
+              <i data-lucide="phone" class="w-4 h-4"></i>
+              <i data-lucide="more-vertical" class="w-4 h-4"></i>
+            </div>
+          </div>
+
+          <!-- Active Simulating User Bar -->
+          <div class="bg-emerald-50 px-3 py-1.5 border-b border-emerald-200 flex items-center justify-between text-[11px] text-emerald-900">
+            <span class="font-medium">Simüle Edilen Üye:</span>
+            <select id="wa-active-user-select" onchange="changeActiveWaUser(this.value)" class="bg-white border border-emerald-300 font-bold rounded-lg px-2 py-0.5 text-xs text-slate-800 focus:outline-none">
+              <!-- Dynamically populated with members -->
+            </select>
+          </div>
+
+          <!-- WhatsApp Chat History Area -->
+          <div id="wa-chat-body" class="flex-1 whatsapp-bg overflow-y-auto p-3 space-y-3 text-xs">
+            <!-- Messages injected dynamically -->
+          </div>
+
+          <!-- WhatsApp Bottom Bar / Input -->
+          <div class="bg-[#f0f2f5] p-2 flex items-center gap-2 border-t border-slate-300">
+            <div class="flex-1 bg-white rounded-full px-3 py-1.5 text-xs text-slate-400 flex items-center justify-between border border-slate-200 shadow-sm">
+              <span>Seçim butonlarını kullanın...</span>
+              <i data-lucide="smile" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <button class="w-8 h-8 rounded-full bg-[#00a884] text-white flex items-center justify-center shadow">
+              <i data-lucide="mic" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL: YENİ SEANS SAATİ EKLE -->
+  <div id="modal-add-slot" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-slate-900 text-sm">Yeni Seans Saati Aç</h3>
+        <button onclick="closeModal('modal-add-slot')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleCreateSlot(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Gün</label>
+          <select id="slot-day" class="w-full px-3 py-2 border rounded-xl bg-white">
+            <option value="Pazartesi">Pazartesi</option>
+            <option value="Salı">Salı</option>
+            <option value="Çarşamba">Çarşamba</option>
+            <option value="Perşembe">Perşembe</option>
+            <option value="Cuma">Cuma</option>
+            <option value="Cumartesi">Cumartesi</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Saat</label>
+          <input type="text" id="slot-time" required placeholder="Örn: 10:00 - 11:00" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Eğitmen</label>
+          <select id="slot-instructor" class="w-full px-3 py-2 border rounded-xl bg-white">
+            <option value="Elif Hoca">Elif Hoca</option>
+            <option value="Zeynep Hoca">Zeynep Hoca</option>
+            <option value="Merve Hoca">Merve Hoca</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Maksimum Kapasite</label>
+          <input type="number" id="slot-capacity" value="4" readonly class="w-full px-3 py-2 border rounded-xl bg-slate-100 text-slate-500 font-bold">
+          <p class="text-[10px] text-slate-400 mt-0.5">Salondaki 4 Reformer yatağı ile sabittir.</p>
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeModal('modal-add-slot')" class="flex-1 py-2 border rounded-xl font-bold text-slate-600">İptal</button>
+          <button type="submit" class="flex-1 py-2 bg-rose-600 text-white rounded-xl font-bold shadow-sm hover:bg-rose-700">Seansı Aç</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: YENİ ÜYE KAYDET -->
+  <div id="modal-add-member" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-slate-900 text-sm">Yeni Üye Kaydı & Paket Açılışı</h3>
+        <button onclick="closeModal('modal-add-member')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleCreateMember(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Üye Adı Soyadı</label>
+          <input type="text" id="member-name" required placeholder="Örn: Ayşe Kaya" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Telefon No (WhatsApp)</label>
+          <input type="text" id="member-phone" required placeholder="0532 000 00 00" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl">
+          <div class="font-bold text-rose-800">1 Aylık Standart Üyelik</div>
+          <div class="text-[11px] text-rose-700">30 gün geçerli • Haftada 2 ders hakkı</div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">İlk Ödeme Durumu</label>
+          <select id="member-payment-status" class="w-full px-3 py-2 border rounded-xl bg-white">
+            <option value="paid">₺4.000 Ödendi (Nakit/Havale)</option>
+            <option value="pending">Ödeme Bekliyor (Borçlu)</option>
+          </select>
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeModal('modal-add-member')" class="flex-1 py-2 border rounded-xl font-bold text-slate-600">Vazgeç</button>
+          <button type="submit" class="flex-1 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-sm hover:bg-slate-800">Üyeyi Başlat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PAZAR GÜNÜ GRUP BİLDİRİMİ -->
+  <div id="modal-sunday-broadcast" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm">Pazar Akşamı Gruba Gidecek Bildirim</h3>
+        </div>
+        <button onclick="closeModal('modal-sunday-broadcast')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">
+        Eğitmenlerin belirlediği güncel boş seanslar tek tıkla şablon haline getirilir ve salondaki ana WhatsApp grubuna duyurulur:
+      </p>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 font-mono whitespace-pre-wrap leading-relaxed mb-4 max-h-48 overflow-y-auto" id="broadcast-preview-text">
+        <!-- populated dynamically -->
+      </div>
+
+      <div class="flex gap-2 text-xs">
+        <button onclick="copyBroadcastMessage()" id="btn-copy-broadcast" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          <span>Metni Kopyala</span>
+        </button>
+        <button onclick="triggerSimulatedGroupBroadcast()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Gruba Gönder (Simüle Et)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPT LOGIC -->
+  <script>
+    // --- 1. INITIAL STATE & MOCK DATABASE ---
+    const DEFAULT_DATA = {
+      slots: [
+        { id: 's1', day: 'Pazartesi', time: '10:00 - 11:00', instructor: 'Elif Hoca', capacity: 4, attendees: ['Deniz Aktaş', 'Burcu Kara'] },
+        { id: 's2', day: 'Pazartesi', time: '18:00 - 19:00', instructor: 'Elif Hoca', capacity: 4, attendees: ['Merve Yılmaz', 'Seda Can'] },
+        { id: 's3', day: 'Salı', time: '11:00 - 12:00', instructor: 'Zeynep Hoca', capacity: 4, attendees: ['Zeynep Koç', 'Ece Demir'] },
+        { id: 's4', day: 'Salı', time: '19:00 - 20:00', instructor: 'Zeynep Hoca', capacity: 4, attendees: ['Gamze Şen', 'Fatma Ay', 'Derya Yurt'] },
+        { id: 's5', day: 'Çarşamba', time: '10:00 - 11:00', instructor: 'Merve Hoca', capacity: 4, attendees: ['Seda Can'] },
+        { id: 's6', day: 'Çarşamba', time: '18:00 - 19:00', instructor: 'Elif Hoca', capacity: 4, attendees: [] },
+        { id: 's7', day: 'Perşembe', time: '18:00 - 19:00', instructor: 'Zeynep Hoca', capacity: 4, attendees: ['Deniz Aktaş', 'Burcu Kara'] },
+        { id: 's8', day: 'Cuma', time: '10:00 - 11:00', instructor: 'Merve Hoca', capacity: 4, attendees: ['Gamze Şen'] }
+      ],
+      members: [
+        { id: 'm1', name: 'Merve Yılmaz', phone: '0532 111 22 33', daysRemaining: 18, paymentStatus: 'paid' },
+        { id: 'm2', name: 'Deniz Aktaş', phone: '0533 222 33 44', daysRemaining: 24, paymentStatus: 'paid' },
+        { id: 'm3', name: 'Seda Can', phone: '0535 333 44 55', daysRemaining: 4, paymentStatus: 'pending' },
+        { id: 'm4', name: 'Zeynep Koç', phone: '0542 444 55 66', daysRemaining: 12, paymentStatus: 'paid' },
+        { id: 'm5', name: 'Gamze Şen', phone: '0536 555 66 77', daysRemaining: 29, paymentStatus: 'paid' },
+        { id: 'm6', name: 'Ayşe Kaya (Yeni)', phone: '0530 999 88 77', daysRemaining: 30, paymentStatus: 'paid' }
+      ],
+      expenses: [
+        { id: 'e1', date: '10.11.2026', category: 'Kira & Aidat', desc: 'Salon Aylık Kira Bedeli', amount: 35000 },
+        { id: 'e2', date: '11.11.2026', category: 'Temizlik & Hijyen', desc: 'Reformer Dezenfektan & Havlu Yıkama', amount: 1450 },
+        { id: 'e3', date: '12.11.2026', category: 'Faturalar (Elek/Su/İnt)', desc: 'Elektrik & Su Faturası', amount: 3200 }
+      ],
+      incomes: [
+        { id: 'i1', date: '01.11.2026', member: 'Gamze Şen', desc: '1 Aylık Üyelik', amount: 4000 },
+        { id: 'i2', date: '02.11.2026', member: 'Deniz Aktaş', desc: '1 Aylık Üyelik', amount: 4000 },
+        { id: 'i3', date: '03.11.2026', member: 'Zeynep Koç', desc: '1 Aylık Üyelik', amount: 4000 },
+        { id: 'i4', date: '05.11.2026', member: 'Merve Yılmaz', desc: '1 Aylık Üyelik', amount: 4000 },
+        { id: 'i5', date: '12.11.2026', member: 'Ayşe Kaya (Yeni)', desc: '1 Aylık Üyelik', amount: 4000 }
+      ]
+    };
+
+    // Global state
+    let state = JSON.parse(localStorage.getItem('zenpilates_state_v3')) || JSON.parse(JSON.stringify(DEFAULT_DATA));
+    let activeWaUserId = state.members[0].id;
+    let activeTab = 'takvim';
+
+    function saveState() {
+      localStorage.setItem('zenpilates_state_v3', JSON.stringify(state));
+      renderDashboard();
+      renderWhatsApp();
+    }
+
+    function resetData() {
+      if(confirm('Tüm demo verileri başlangıç durumuna sıfırlansın mı?')) {
+        state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        activeWaUserId = state.members[0].id;
+        saveState();
+      }
+    }
+
+    // --- 2. DASHBOARD RENDERING ---
+    function renderDashboard() {
+      // 2. Render Slots Grid
+      const slotsContainer = document.getElementById('slots-grid');
+      slotsContainer.innerHTML = '';
+
+      state.slots.forEach(slot => {
+        const isFull = slot.attendees.length >= slot.capacity;
+        const freeSpots = slot.capacity - slot.attendees.length;
+
+        const card = document.createElement('div');
+        card.className = `p-3.5 rounded-xl border transition-all ${isFull ? 'bg-slate-50/80 border-slate-200' : 'bg-white border-slate-200 hover:border-rose-300 shadow-sm'}`;
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-slate-900 text-sm">${slot.day}</span>
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">${slot.time}</span>
+              </div>
+              <div class="text-xs text-rose-600 font-semibold flex items-center gap-1 mt-0.5">
+                <i data-lucide="user" class="w-3 h-3"></i>
+                <span>${slot.instructor}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${isFull ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                ${isFull ? 'Dolu (4/4)' : `${freeSpots} Yer Boş (${slot.attendees.length}/4)`}
+              </span>
+            </div>
+          </div>
+
+          <!-- Attendees -->
+          <div class="mt-2.5 pt-2 border-t border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Kayıtlı Üyeler:</span>
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              ${slot.attendees.length > 0 ? slot.attendees.map(name => `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-medium">
+                  <span>${name}</span>
+                  <button onclick="removeAttendeeFromSlot('${slot.id}', '${name}')" class="text-slate-400 hover:text-rose-600" title="Kayıttan çıkar">×</button>
+                </span>
+              `).join('') : '<span class="text-xs text-slate-400 italic">Henüz kimse seçmedi</span>'}
+            </div>
+          </div>
+        `;
+        slotsContainer.appendChild(card);
+      });
+
+      // 3. Render Members Table
+      const membersTbody = document.getElementById('members-table-body');
+      membersTbody.innerHTML = '';
+      let pendingDebtCount = 0;
+
+      state.members.forEach(member => {
+        if(member.paymentStatus === 'pending') pendingDebtCount++;
+
+        // Current booked slots details (Up to 2 slots per week)
+        const bookedSlots = state.slots.filter(s => s.attendees.includes(member.name));
+        member.weeklyUsage = bookedSlots.length;
+
+        const bookingText = bookedSlots.length > 0 
+          ? bookedSlots.map(b => `
+              <div class="inline-flex items-center gap-1 px-2 py-0.5 mb-1 mr-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md font-semibold text-[11px]">
+                <span>${b.day} ${b.time}</span>
+                <span class="text-[10px] text-emerald-600">(${b.instructor})</span>
+              </div>
+            `).join('')
+          : `<span class="text-slate-400 italic">Seçim Yapılmadı</span>`;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/70 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-900">${member.name}</div>
+            <div class="text-[11px] text-slate-400">${member.phone}</div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-semibold ${member.daysRemaining <= 5 ? 'text-rose-600' : 'text-slate-700'}">
+              ${member.daysRemaining} gün kaldı
+            </div>
+            <div class="text-[10px] text-slate-400">1 aylık üyelik</div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-semibold text-slate-900">Bu hafta: ${bookedSlots.length}/2 ders</div>
+            <div class="text-[11px] ${bookedSlots.length >= 2 ? 'text-emerald-700 font-bold' : 'text-amber-600 font-medium'}">
+              ${bookedSlots.length >= 2 ? '✅ 2 Seans Seçildi' : `${2 - bookedSlots.length} ders hakkı var`}
+            </div>
+          </td>
+          <td class="py-3 px-3">
+            ${member.paymentStatus === 'paid' ? `
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                <i data-lucide="check" class="w-3 h-3"></i>
+                <span>Ödendi (₺4.000)</span>
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+                <i data-lucide="clock" class="w-3 h-3"></i>
+                <span>Bekliyor (Borçlu)</span>
+              </span>
+            `}
+          </td>
+          <td class="py-3 px-3">
+            ${bookingText}
+          </td>
+          <td class="py-3 px-3 text-right">
+            ${member.paymentStatus === 'pending' ? `
+              <button onclick="markPaymentPaid('${member.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-sm">
+                Tahsil Et
+              </button>
+            ` : `
+              <button onclick="togglePaymentStatus('${member.id}')" class="text-slate-400 hover:text-slate-600 text-[11px]">
+                Düzenle
+              </button>
+            `}
+          </td>
+        `;
+        membersTbody.appendChild(tr);
+      });
+
+      document.getElementById('badge-debt-count').innerText = `${pendingDebtCount} Bekleyen`;
+
+      // 4. Render Kasa & Muhasebe
+      const totalIncome = state.incomes.reduce((sum, i) => sum + i.amount, 0);
+      const totalExpense = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+      const netBalance = totalIncome - totalExpense;
+
+      document.getElementById('kasa-total-income').innerText = `₺${totalIncome.toLocaleString('tr-TR')}`;
+      document.getElementById('kasa-total-expense').innerText = `₺${totalExpense.toLocaleString('tr-TR')}`;
+      document.getElementById('kasa-net-balance').innerText = `₺${netBalance.toLocaleString('tr-TR')}`;
+
+      const transactionsTbody = document.getElementById('kasa-transactions-body');
+      transactionsTbody.innerHTML = '';
+
+      // Merge and sort transactions
+      const allTx = [
+        ...state.incomes.map(i => ({ ...i, type: 'income' })),
+        ...state.expenses.map(e => ({ ...e, type: 'expense' }))
+      ];
+
+      allTx.forEach(tx => {
+        const isIncome = tx.type === 'income';
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-slate-500">${tx.date}</td>
+          <td class="py-2 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isIncome ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${isIncome ? 'GELİR' : 'GİDER'}
+            </span>
+          </td>
+          <td class="py-2 px-3 font-medium text-slate-800">${tx.desc || tx.category}</td>
+          <td class="py-2 px-3 font-bold ${isIncome ? 'text-emerald-700' : 'text-rose-700'}">
+            ${isIncome ? '+' : '-'}₺${tx.amount.toLocaleString('tr-TR')}
+          </td>
+        `;
+        transactionsTbody.appendChild(tr);
+      });
+
+      // Update Lucide icons
+      lucide.createIcons();
+    }
+
+    // --- 3. WHATSAPP BOT SIMULATOR LOGIC ---
+    function populateWaUserSelect() {
+      const select = document.getElementById('wa-active-user-select');
+      select.innerHTML = '';
+      state.members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.innerText = m.name;
+        if(m.id === activeWaUserId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function changeActiveWaUser(userId) {
+      activeWaUserId = userId;
+      renderWhatsApp();
+    }
+
+    function renderWhatsApp() {
+      populateWaUserSelect();
+      const user = state.members.find(m => m.id === activeWaUserId);
+      if(!user) return;
+
+      const chatBody = document.getElementById('wa-chat-body');
+      chatBody.innerHTML = '';
+
+      // Check user's current bookings for this week (Up to 2)
+      const bookedSlots = state.slots.filter(s => s.attendees.includes(user.name));
+      const weeklyUsage = bookedSlots.length;
+      user.weeklyUsage = weeklyUsage;
+
+      // Bubble 1: Hoşgeldin & Paket Durumu Bildirimi
+      const b1 = document.createElement('div');
+      b1.className = "max-w-[85%] bg-white rounded-2xl rounded-tl-none p-3 shadow-sm border border-slate-200 text-slate-800 space-y-1.5";
+      b1.innerHTML = `
+        <div class="font-bold text-rose-700 text-[11px] flex items-center justify-between">
+          <span>🌸 ZenPilates Rezervasyon Botu</span>
+          <span class="text-[9px] text-slate-400">Pazar 20:00</span>
+        </div>
+        <p>Merhaba <strong>${user.name}</strong> 👋</p>
+        <div class="bg-rose-50 border border-rose-100 p-2 rounded-xl text-[11px] space-y-0.5">
+          <div>⏳ <strong>Kalan Üyelik Süresi:</strong> ${user.daysRemaining} gün</div>
+          <div>🧘‍♀️ <strong>Bu Haftaki Durum:</strong> ${weeklyUsage}/2 ders seçildi</div>
+        </div>
+      `;
+      chatBody.appendChild(b1);
+
+      // Bubble 2: Aktif Seçilmiş Dersler (Varsa)
+      if (bookedSlots.length > 0) {
+        const b2 = document.createElement('div');
+        b2.className = "max-w-[90%] bg-emerald-50 border border-emerald-200 rounded-2xl rounded-tl-none p-3 shadow-sm text-emerald-950 space-y-2";
+        b2.innerHTML = `
+          <div class="font-bold text-emerald-800 text-xs flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Bu Haftaki Rezervasyonlarınız (${bookedSlots.length}/2)</span>
+            </span>
+          </div>
+          
+          <div class="space-y-2 pt-1">
+            ${bookedSlots.map((slot, index) => `
+              <div class="p-2.5 bg-white rounded-xl border border-emerald-100 shadow-xs flex items-center justify-between">
+                <div>
+                  <div class="text-[10px] font-bold text-emerald-700 uppercase">${index + 1}. DERSİNİZ</div>
+                  <div class="font-bold text-slate-900 text-xs">${slot.day} • ${slot.time}</div>
+                  <div class="text-[10px] text-slate-500 font-medium">${slot.instructor}</div>
+                </div>
+                <button onclick="handleWaCancelBooking('${slot.id}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1" title="İptal Et">
+                  <i data-lucide="x" class="w-3 h-3"></i>
+                  <span>İptal</span>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+
+          <p class="text-[10px] text-slate-500 leading-tight">
+            ⚠️ <strong>İptal Kuralı:</strong> Derse 24 saatten fazla süre varsa iptal edilen ders hakkı anında geri açılır.
+          </p>
+        `;
+        chatBody.appendChild(b2);
+      }
+
+      // Bubble 3: Boş Seans Seçimi (Eğer 2 dersten az seçilmişse göster)
+      if (weeklyUsage < 2) {
+        const b3 = document.createElement('div');
+        b3.className = "max-w-[90%] bg-white rounded-2xl rounded-tl-none p-3 shadow-sm border border-slate-200 space-y-2";
+        
+        // Boş seansları listele (Üyenin zaten katıldığı seanslar hariç)
+        const bookedSlotIds = bookedSlots.map(b => b.id);
+        const availableSlots = state.slots.filter(s => s.attendees.length < s.capacity && !bookedSlotIds.includes(s.id));
+
+        b3.innerHTML = `
+          <div class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span>${weeklyUsage === 0 ? 'Katılmak istediğiniz 1. seansı seçin:' : '👉 2. ders hakkınız için seans seçin:'}</span>
+          </div>
+          <p class="text-[11px] text-slate-500">Haftalık 2 ders hakkınız bulunmaktadır.</p>
+          <div class="space-y-1.5 pt-1">
+            ${availableSlots.length > 0 ? availableSlots.map(slot => `
+              <button onclick="handleWaSelectSlot('${slot.id}')" class="w-full text-left p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 transition-all group flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-slate-800 text-xs group-hover:text-rose-600">${slot.day} - ${slot.time}</div>
+                  <div class="text-[10px] text-slate-500">${slot.instructor}</div>
+                </div>
+                <div class="text-right">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    ${slot.capacity - slot.attendees.length} Yer Boş
+                  </span>
+                </div>
+              </button>
+            `).join('') : '<div class="text-xs text-rose-600 font-bold p-2 bg-rose-50 rounded-xl">Seçilebilecek uygun boş seans kalmadı!</div>'}
+          </div>
+        `;
+        chatBody.appendChild(b3);
+      } else {
+        // 2 ders de seçilmişse teyit mesajı
+        const b4 = document.createElement('div');
+        b4.className = "max-w-[85%] bg-slate-100 border border-slate-200 rounded-2xl rounded-tl-none p-2.5 text-center text-slate-600 text-[11px]";
+        b4.innerHTML = `
+          <span>🎉 <strong>Bu haftaki 2 ders hakkınızı da tamamladınız!</strong> Seans değiştirmek isterseniz yukarıdan ilgili dersi iptal edip yeniden saat seçebilirsiniz.</span>
+        `;
+        chatBody.appendChild(b4);
+      }
+
+      // Re-create icons in WhatsApp body
+      lucide.createIcons();
+      // Scroll to bottom
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    // --- 4. ACTIONS & SYNC BETWEEN WA & PANEL ---
+
+    // Üye WhatsApp'tan seans seçtiğinde
+    function handleWaSelectSlot(slotId) {
+      const user = state.members.find(m => m.id === activeWaUserId);
+      const slot = state.slots.find(s => s.id === slotId);
+
+      if(!user || !slot) return;
+
+      // 2 ders kontrolü
+      const currentBookedCount = state.slots.filter(s => s.attendees.includes(user.name)).length;
+      if (currentBookedCount >= 2) {
+        alert('Bu haftaki 2 ders hakkınızı zaten kullandınız!');
+        return;
+      }
+
+      if(slot.attendees.length >= slot.capacity) {
+        alert('Bu seans az önce doldu, lütfen başka bir saat seçin.');
+        return;
+      }
+
+      // Add user to slot
+      slot.attendees.push(user.name);
+      saveState();
+
+      // Feedback animation effect
+      showToast(`✅ ${user.name} için ${slot.day} ${slot.time} seansı rezerve edildi! (${currentBookedCount + 1}/2 ders)`);
+    }
+
+    // Üye WhatsApp'tan ders iptal ettiğinde (24 Saat Kuralı)
+    function handleWaCancelBooking(slotId) {
+      const user = state.members.find(m => m.id === activeWaUserId);
+      const slot = state.slots.find(s => s.id === slotId);
+
+      if(!user || !slot) return;
+
+      const confirmCancel = confirm(`Sayın ${user.name},\n${slot.day} ${slot.time} dersinizi iptal etmek istediğinize emin misiniz?\n\n(Derse 24 saatten fazla olduğu için 1 ders hakkınız geri açılacaktır)`);
+
+      if(confirmCancel) {
+        // Remove attendee from that specific slot
+        slot.attendees = slot.attendees.filter(name => name !== user.name);
+        saveState();
+        showToast(`❌ ${slot.day} ${slot.time} rezervasyonu iptal edildi. 1 ders hakkınız tekrar açıldı!`);
+      }
+    }
+
+    // Panelden eğitmen bir üyeyi seans listesinden çıkardığında
+    function removeAttendeeFromSlot(slotId, attendeeName) {
+      if(confirm(`${attendeeName} bu dersten çıkarılsın mı?`)) {
+        const slot = state.slots.find(s => s.id === slotId);
+        if(slot) {
+          slot.attendees = slot.attendees.filter(n => n !== attendeeName);
+          saveState();
+        }
+      }
+    }
+
+    // Yeni Seans Ekle (Eğitmen)
+    function handleCreateSlot(e) {
+      e.preventDefault();
+      const day = document.getElementById('slot-day').value;
+      const time = document.getElementById('slot-time').value;
+      const instructor = document.getElementById('slot-instructor').value;
+
+      state.slots.push({
+        id: 's_' + Date.now(),
+        day,
+        time,
+        instructor,
+        capacity: 4,
+        attendees: []
+      });
+
+      closeModal('modal-add-slot');
+      saveState();
+      showToast(`Yeni seans eklendi: ${day} ${time} (${instructor}). WhatsApp'ta hemen göründü!`);
+      document.getElementById('slot-time').value = '';
+    }
+
+    // Yeni Üye Ekle
+    function handleCreateMember(e) {
+      e.preventDefault();
+      const name = document.getElementById('member-name').value;
+      const phone = document.getElementById('member-phone').value;
+      const status = document.getElementById('member-payment-status').value;
+
+      const newMember = {
+        id: 'm_' + Date.now(),
+        name,
+        phone,
+        daysRemaining: 30,
+        weeklyUsage: 0,
+        paymentStatus: status,
+        currentBooking: null
+      };
+
+      state.members.push(newMember);
+
+      if(status === 'paid') {
+        state.incomes.push({
+          id: 'i_' + Date.now(),
+          date: new Date().toLocaleDateString('tr-TR'),
+          member: name,
+          desc: '1 Aylık Üyelik Bedeli',
+          amount: 4000
+        });
+      }
+
+      closeModal('modal-add-member');
+      activeWaUserId = newMember.id;
+      saveState();
+      showToast(`${name} başarıyla kaydedildi ve WhatsApp simülatörüne aktarıldı!`);
+    }
+
+    // Manuel Masraf Ekle
+    function handleAddExpense(e) {
+      e.preventDefault();
+      const desc = document.getElementById('expense-desc').value;
+      const amount = parseFloat(document.getElementById('expense-amount').value);
+      const category = document.getElementById('expense-category').value;
+
+      state.expenses.unshift({
+        id: 'e_' + Date.now(),
+        date: new Date().toLocaleDateString('tr-TR'),
+        category,
+        desc,
+        amount
+      });
+
+      document.getElementById('expense-desc').value = '';
+      document.getElementById('expense-amount').value = '';
+      saveState();
+      showToast(`Masraf kaydedildi: ₺${amount.toLocaleString('tr-TR')} kasadan düşüldü.`);
+    }
+
+    // Ödeme Durumunu Değiştir
+    function markPaymentPaid(memberId) {
+      const member = state.members.find(m => m.id === memberId);
+      if(member) {
+        member.paymentStatus = 'paid';
+        state.incomes.push({
+          id: 'i_' + Date.now(),
+          date: new Date().toLocaleDateString('tr-TR'),
+          member: member.name,
+          desc: '1 Aylık Paket Tahsilatı (Geciken)',
+          amount: 4000
+        });
+        saveState();
+        showToast(`${member.name} için ₺4.000 tahsilat kaydedildi!`);
+      }
+    }
+
+    function togglePaymentStatus(memberId) {
+      const member = state.members.find(m => m.id === memberId);
+      if(member) {
+        member.paymentStatus = member.paymentStatus === 'paid' ? 'pending' : 'paid';
+        saveState();
+      }
+    }
+
+    // --- 5. SUNDAY BROADCAST GENERATOR ---
+    function openSundayBroadcastModal() {
+      const available = state.slots.filter(s => s.attendees.length < s.capacity);
+      let text = `🌸 *ZenPilates - Bu Haftanın Boş Seans Programı* 🌸\n\n`;
+      text += `Sevgili üyelerimiz, bu haftanın boş reformer seansları belirlenmiştir. Katılmak istediğiniz seansı seçmek için aşağıdaki linke tıklayıp bota saatini yazabilir veya butona basabilirsiniz:\n\n`;
+      
+      available.forEach(s => {
+        const free = s.capacity - s.attendees.length;
+        text += `• ${s.day} ${s.time} (${s.instructor}) ➔ *${free} yer boş*\n`;
+      });
+
+      text += `\n👉 *Hemen Seansını Seç:* https://wa.me/905320000000?text=SeansSec\n`;
+      text += `\n⚠️ *Hatırlatma:* Rezervasyonunuzu derse en geç 24 saat kalana kadar bota "iptal" yazarak iptal edebilirsiniz.`;
+
+      document.getElementById('broadcast-preview-text').innerText = text;
+      openModal('modal-sunday-broadcast');
+    }
+
+    function copyBroadcastMessage() {
+      const text = document.getElementById('broadcast-preview-text').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Metin panoya kopyalandı! Doğrudan WhatsApp grubuna yapıştırabilirsiniz.');
+      });
+    }
+
+    function triggerSimulatedGroupBroadcast() {
+      closeModal('modal-sunday-broadcast');
+      showToast('Pazar grubu duyurusu simüle edildi. Üyeler WhatsApp botuna yönlendirildi!');
+    }
+
+    // --- UI HELPERS & MODALS ---
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-rose-500', 'text-white', 'shadow-sm', 'shadow-rose-200');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+      });
+      document.getElementById(`tab-btn-${tab}`).classList.add('bg-rose-500', 'text-white', 'shadow-sm', 'shadow-rose-200');
+      document.getElementById(`tab-btn-${tab}`).classList.remove('text-slate-600', 'hover:bg-slate-100');
+
+      document.getElementById('tab-content-takvim').classList.add('hidden');
+      document.getElementById('tab-content-uyeler').classList.add('hidden');
+      document.getElementById('tab-content-kasa').classList.add('hidden');
+
+      document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function openAddSlotModal() { openModal('modal-add-slot'); }
+    function openAddMemberModal() { openModal('modal-add-member'); }
+
+    function setMobileView(view) {
+      const panel = document.getElementById('panel-container');
+      const wa = document.getElementById('whatsapp-container');
+      const btnP = document.getElementById('mob-btn-panel');
+      const btnW = document.getElementById('mob-btn-wa');
+
+      if(view === 'panel') {
+        panel.classList.remove('hidden');
+        wa.classList.add('hidden');
+        btnP.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
+        btnW.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
+      } else {
+        panel.classList.add('hidden');
+        wa.classList.remove('hidden');
+        btnW.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
+        btnP.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl shadow-xl z-50 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200';
+      toast.innerHTML = `<i data-lucide="bell" class="w-4 h-4 text-rose-400"></i><span>${message}</span>`;
+      document.body.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.remove();
+      }, 3500);
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderDashboard();
+      renderWhatsApp();
+    });
+  </script>
+</body>
+</html>
